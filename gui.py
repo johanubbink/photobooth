@@ -28,7 +28,7 @@ def capture_image(webcam):
     imagen = webcam.get_image()
     # pygame.image.save(imagen,'temp.jpeg')
     photobooth.capture()
-    # time.sleep(1)
+    time.sleep(1)
 
 
 def print_photo():
@@ -52,11 +52,18 @@ pygame.camera.init()
 
 #create fullscreen display 640x480
 # screen = pygame.display.set_mode((640,480),0)
-
+pygame.mouse.set_visible(False) #hide the mouse cursor
 infoObject = pygame.display.Info()
 
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((infoObject.current_w,infoObject.current_h), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
+x_size, y_size = screen.get_size()
+MIDDEL_X = x_size/2
+MIDDEL_Y = y_size/2
+
+preview_size= (x_size, x_size//16*9)
+preview_y = (y_size - x_size//16*9)//2
+
 
 #find, open and start low-res camera
 cam_list = pygame.camera.list_cameras()
@@ -88,17 +95,19 @@ while True:
 
     if current_state == 0:
         #grab image, scale and blit to screen
+        screen.fill([0,0,0])
         imagen = webcam.get_image()
-        imagen = pygame.transform.scale(imagen,(1920,1080))
-        screen.blit(imagen,(0,0))
+        imagen = pygame.transform.scale(imagen,preview_size)
+        imagen = pygame.transform.flip(imagen,True,False)
+        screen.blit(imagen,(0,preview_y))
 
         #do the display
         # text = welcome_font.render("Johan en Marli se Troue", True, (0, 0, 0))
         # screen.blit(text,
         #         (960 - text.get_width() // 2, 540 - text.get_height() // 2))
-        text = welcome_font.render("Druk space om te begin", True, (0, 0, 0))
+        text = welcome_font.render("Press button to start!", True, (128, 0, 0))
         screen.blit(text,
-                (960 - text.get_width() // 2, 540 - text.get_height() // 2))
+                (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
 
 
         next_state = current_state
@@ -110,19 +119,20 @@ while True:
 
     elif current_state == 1:
         imagen = webcam.get_image()
-        imagen = pygame.transform.scale(imagen,(1920,1080))
-        screen.blit(imagen,(0,0))
+        imagen = pygame.transform.scale(imagen,preview_size)
+        imagen = pygame.transform.flip(imagen,True,False)
+        screen.blit(imagen,(0,preview_y))
 
 
         if count_down == 0:
             text = font.render("Smile!", True, (128, 0, 0))
             screen.blit(text,
-                    (960 - text.get_width() // 2, 540 - text.get_height() // 2))
+                    (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
         else:
             #display the time
             text = font.render(str(count_down), True, (128, 0, 0))
             screen.blit(text,
-                        (960 - text.get_width() // 2, 540 - text.get_height() // 2))
+                        (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
 
 
     ###############
@@ -142,8 +152,10 @@ while True:
     elif current_state == 3:
         latest_file = get_last_photo()
         imagen = pygame.image.load(latest_file)
-        imagen = pygame.transform.scale(imagen,(1920,1080))
-        screen.blit(imagen,(0,0))
+        imagen = pygame.transform.scale(imagen,(y_size//3 *4,y_size))
+        screen.fill([0,0,0])
+        pos =  (x_size - y_size//3 *4)/2
+        screen.blit(imagen,(pos,0))
 
     ################################
     #ask if you want to print state#
@@ -152,25 +164,27 @@ while True:
     elif current_state == 4:
         # imagen = pygame.image.load('temp.jpeg')
         # imagen = pygame.transform.scale(imagen,(1920,1080))
-        screen.blit(imagen,(0,0))
+        pos =  (x_size - y_size//3 *4)/2
+        screen.blit(imagen,(pos,0))
 
-        text = welcome_font.render("Druk knoppie om foto te druk", True, (0, 0, 0))
+        text = welcome_font.render("Press button to print photo!", True, (128, 0, 0))
         screen.blit(text,
-                (960 - text.get_width() // 2, 400 - text.get_height() // 2))
+                (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - 200 - text.get_height() // 2))
 
         text = font.render(str(count_down), True, (128, 0, 0))
         screen.blit(text,
-                    (960 - text.get_width() // 2, 800 - text.get_height() // 2))
+                    (MIDDEL_X - text.get_width() // 2, MIDDEL_Y + 200 - text.get_height() // 2))
     
 
     elif current_state == 5:
         imagen = webcam.get_image()
-        imagen = pygame.transform.scale(imagen,(1920,1080))
-        screen.blit(imagen,(0,0))
+        imagen = pygame.transform.scale(imagen,preview_size)
+        imagen = pygame.transform.flip(imagen,True,False)
+        screen.blit(imagen,(0,preview_y))
 
-        text = welcome_font.render("Foto gekanseleer...", True, (0, 0, 0))
+        text = welcome_font.render("Printing cancelled...", True, (128, 0, 0))
         screen.blit(text,
-                (960 - text.get_width() // 2, 540 - text.get_height() // 2))
+                (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
 
     ########################
     #Handle external events#
@@ -183,7 +197,7 @@ while True:
 
         if current_state ==1:
             count_down += -1
-            if count_down < 0:
+            if count_down < 1:
                 next_state = 2
 
         if current_state == 3:
@@ -238,13 +252,14 @@ while True:
         count_down = COUNT_DOWN_TIME
     
     if current_state == 1 and next_state == 2:
-        imagen = webcam.get_image()
-        imagen = pygame.transform.scale(imagen,(1920,1080))
-        screen.blit(imagen,(0,0))
-
-        text = welcome_font.render("Capturing...", True, (0, 0, 0))
+        # imagen = webcam.get_image()
+        # imagen = pygame.transform.scale(imagen,(1920,1080))
+        # screen.blit(imagen,(0,0))
+        white = [255, 255, 255]
+        screen.fill(white)
+        text = font.render("Smile!", True, (0, 0, 0))
         screen.blit(text,
-        (960 - text.get_width() // 2, 540 - text.get_height() // 2))
+        (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
 
     if current_state == 2 and next_state == 3:
         count_down = DISPLAY_IMAGE_TIME
@@ -261,11 +276,12 @@ while True:
 
     if ((current_state == 4 or current_state ==5) and next_state == 6):
         count_down = PRINTING_ANIM_TIME
-        screen.blit(imagen,(0,0))
+        pos =  (x_size - y_size//3 *4)/2
+        screen.blit(imagen,(pos,0))
 
-        text = welcome_font.render("Sending photo to printer...", True, (0, 0, 0))
+        text = welcome_font.render("Sending photo to printer...", True, (128, 0, 0))
         screen.blit(text,
-        (960 - text.get_width() // 2, 540 - text.get_height() // 2))
+        (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
 
         #call the printing photo
         print_photo()
