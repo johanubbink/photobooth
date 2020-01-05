@@ -7,6 +7,10 @@ import photobooth
 import printer
 import create_photo
 
+
+import gphoto2 as gp
+
+
 import glob
 import os
 
@@ -39,7 +43,7 @@ def print_photo():
     create_photo.create_printable(get_last_photo())
     printer.print_photo(get_last_photo())
 
-#Define some important constants
+#Define some important constantsen,preview_size)
 
 COUNT_DOWN_TIME = 3
 DISPLAY_IMAGE_TIME = 1
@@ -141,8 +145,23 @@ while True:
     #this state captures the image
 
     elif current_state == 2:
-        capture_image(webcam)
+        file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+        screen.fill([255,255,255])
+        text = welcome_font.render("processing...", True, (0, 0, 0))
+        screen.blit(text,
+        (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
 
+
+        next_state = 2_5
+
+    elif current_state == 2_5:
+
+        target = "images/" + file_path.name
+        camera_file = camera.file_get(
+            file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+        camera_file.save(target)
+        # subprocess.call(['xdg-open', target])
+        camera.exit()
         next_state = 3
 
     #####################
@@ -257,6 +276,11 @@ while True:
         # screen.blit(imagen,(0,0))
         white = [255, 255, 255]
         screen.fill(white)
+        #create the camera object
+        
+        
+        camera = gp.Camera()
+        camera.init()
         text = font.render("Smile!", True, (0, 0, 0))
         screen.blit(text,
         (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
