@@ -9,7 +9,7 @@ import create_photo
 
 
 import gphoto2 as gp
-
+import RPi.GPIO as GPIO
 
 import glob
 import os
@@ -43,13 +43,25 @@ def print_photo():
     create_photo.create_printable(get_last_photo())
     printer.print_photo(get_last_photo())
 
-#Define some important constantsen,preview_size)
+print (os.path.realpath(__file__))
 
+#Define the button press setup
+BUTTON_PIN = 18
+DEBOUNCE_TIME = 4
+
+debounce_counter = 0
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+#Define some important constantsen,preview_size)
 COUNT_DOWN_TIME = 3
 DISPLAY_IMAGE_TIME = 1
-PRINT_OPTION_TIME = 5
+PRINT_OPTION_TIME = 10
 CANCEL_TIME = 1
 PRINTING_ANIM_TIME = 2
+
+button_flag = False
 
 pygame.init()
 pygame.camera.init()
@@ -59,6 +71,7 @@ pygame.camera.init()
 pygame.mouse.set_visible(False) #hide the mouse cursor
 infoObject = pygame.display.Info()
 
+#screen = pygame.display.set_mode((infoObject.current_w,infoObject.current_h), pygame.FULLSCREEN)
 screen = pygame.display.set_mode((infoObject.current_w,infoObject.current_h), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 x_size, y_size = screen.get_size()
@@ -155,10 +168,12 @@ while True:
         next_state = 2_5
 
     elif current_state == 2_5:
-
+        
+        
         target = "images/" + file_path.name
         camera_file = camera.file_get(
             file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+        print (target)
         camera_file.save(target)
         # subprocess.call(['xdg-open', target])
         camera.exit()
@@ -196,6 +211,7 @@ while True:
     
 
     elif current_state == 5:
+        screen.fill([0,0,0])
         imagen = webcam.get_image()
         imagen = pygame.transform.scale(imagen,preview_size)
         imagen = pygame.transform.flip(imagen,True,False)
@@ -205,6 +221,9 @@ while True:
         screen.blit(text,
                 (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
 
+    elif current_state == 6:
+        #call the printing photo
+        print_photo()
     ########################
     #Handle external events#
     ########################
@@ -244,6 +263,21 @@ while True:
 
     # Handle button events
     for event in pygame.event.get():
+        
+        #handle the button press
+        if button_flag:
+            button_flag = False
+            
+            if current_state == 0:
+                prev_time = time.time()
+                next_state = 1
+            if current_state == 4:
+                next_state = 6
+            if current_state == 5:
+                next_state = 6            
+            
+            
+            
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 if current_state == 0:
@@ -307,8 +341,7 @@ while True:
         screen.blit(text,
         (MIDDEL_X - text.get_width() // 2, MIDDEL_Y - text.get_height() // 2))
 
-        #call the printing photo
-        print_photo()
+        
         
 
 
@@ -316,6 +349,26 @@ while True:
     # pygame.display.update()
     pygame.display.flip()
 
-
-    clock.tick(100)
-    current_state = next_state    
+    
+    
+    
+    #do the button debouncing
+    for k in range(5):
+        the_time = time.time()
+        while time.time() - the_time > 0.1:
+            #do nothin
+            x = 1
+            
+        input_state = GPIO.input(18)
+        if input_state == False:
+            debounce_counter += 1
+        else:
+            debounce_counter = 0
+            
+        if debounce_counter > DEBOUNCE_TIME:
+            button_flag = True
+        
+    clock.tick(50)
+    current_state = next_state
+        
+        
