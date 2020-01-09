@@ -1,13 +1,13 @@
 from PIL import Image
 
-def create_printable(filename):
+def create_printable(filename,foldername):
     image1 = Image.open(filename)
     MARGIN = 15
 
     #join the photos and create printable
 
     #open up the template image
-    background = Image.open("template.png")
+    background = Image.open(foldername + "/template.png")
     grid_x, grid_y =  background.size
 
     #resize the captured image to fit

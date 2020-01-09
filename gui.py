@@ -14,6 +14,8 @@ import RPi.GPIO as GPIO
 import glob
 import os
 
+from PIL import Image
+
 def get_last_photo():
     '''
     Method to get the most recent file in the directory and
@@ -22,6 +24,26 @@ def get_last_photo():
     list_of_files = glob.glob(foldername + '/images/*') # * means all if need specific format then *.csv
     latest_file = max(list_of_files, key=os.path.getctime)
     return latest_file
+
+def crop_sensor(file_name):
+    '''
+    Method to crop the image to more closely resemble the webcam
+    '''
+    
+    SIZE_PERCENT = 0.75
+    
+    image1 = Image.open(file_name)
+    grid_x, grid_y =  image1.size
+    
+    desired_height = int(grid_y*SIZE_PERCENT)
+    desired_width = int(grid_x*SIZE_PERCENT)
+    
+    crop_y = grid_y - desired_height
+    crop_x = grid_x - desired_width
+    
+    
+    image_cropped = image1.crop((crop_x//2,crop_y//2,grid_x - crop_x//2,grid_y - crop_y//2))
+    image_cropped.save(file_name)
 
 
 def capture_image(webcam):
@@ -40,7 +62,7 @@ def print_photo():
     Send the photo to the printer
     '''
     print ("Sending the photo to the printer")
-    create_photo.create_printable(get_last_photo())
+    create_photo.create_printable(get_last_photo(),foldername)
     printer.print_photo(get_last_photo())
 
 
@@ -180,6 +202,7 @@ while True:
         camera_file.save(target)
         # subprocess.call(['xdg-open', target])
         camera.exit()
+        crop_sensor(target)
         next_state = 3
 
     #####################
@@ -188,6 +211,7 @@ while True:
 
     elif current_state == 3:
         latest_file = get_last_photo()
+        
         imagen = pygame.image.load(latest_file)
         imagen = pygame.transform.scale(imagen,(y_size//3 *4,y_size))
         screen.fill([0,0,0])
