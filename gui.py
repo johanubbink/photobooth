@@ -19,7 +19,7 @@ def get_last_photo():
     Method to get the most recent file in the directory and
     add the file
     '''
-    list_of_files = glob.glob('images/*') # * means all if need specific format then *.csv
+    list_of_files = glob.glob(foldername + '/images/*') # * means all if need specific format then *.csv
     latest_file = max(list_of_files, key=os.path.getctime)
     return latest_file
 
@@ -43,7 +43,10 @@ def print_photo():
     create_photo.create_printable(get_last_photo())
     printer.print_photo(get_last_photo())
 
-print (os.path.realpath(__file__))
+
+scriptpath = os.path.realpath(__file__)
+foldername = os.path.dirname(scriptpath)
+
 
 #Define the button press setup
 BUTTON_PIN = 18
@@ -170,7 +173,7 @@ while True:
     elif current_state == 2_5:
         
         
-        target = "images/" + file_path.name
+        target = foldername + "/images/" + file_path.name
         camera_file = camera.file_get(
             file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
         print (target)
@@ -224,6 +227,8 @@ while True:
     elif current_state == 6:
         #call the printing photo
         print_photo()
+        
+        next_state = 0
     ########################
     #Handle external events#
     ########################
